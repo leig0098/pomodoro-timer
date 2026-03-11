@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ee5a5a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="番茄钟">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>番茄钟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 60px 80px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 66vw;
+            min-height: 66vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 50px;
+            font-size: 48px;
+        }
+
+        .timer-display {
+            font-size: 160px;
+            font-weight: bold;
+            color: #ee5a5a;
+            margin: 50px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 25px 60px;
+            font-size: 28px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .start-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .reset-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #e68a00;
+            transform: translateY(-2px);
+        }
+
+        .stop-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .stop-btn:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            margin-top: 40px;
+            font-size: 24px;
+            color: #666;
+        }
+
+        .share {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            width: 100%;
+            max-width: 720px;
+        }
+
+        .share-row {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .share button {
+            padding: 14px 26px;
+            font-size: 18px;
+            border-radius: 12px;
+        }
+
+        .share input {
+            padding: 14px 16px;
+            font-size: 16px;
+            border-radius: 12px;
+            border: 1px solid #e5e5e5;
+            width: min(460px, 100%);
+            outline: none;
+        }
+
+        .share input:focus {
+            border-color: #2f7ef7;
+        }
+
+        .share-btn {
+            background: #2f7ef7;
+            color: white;
+        }
+
+        .share-btn:hover {
+            background: #2466c8;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn {
+            background: #f1f3f5;
+            color: #333;
+        }
+
+        .copy-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .share-link {
+            width: 100%;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 16px;
+            color: #555;
+            text-align: left;
+            word-break: break-all;
+        }
+
+        .share-hint {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>番茄钟</h1>
+        <div class="timer-display" id="timer">30:00</div>
+        <div class="buttons">
+            <button class="start-btn" id="startBtn" onclick="startTimer()">开始</button>
+            <button class="reset-btn" onclick="resetTimer()">归零</button>
+            <button class="stop-btn" onclick="stopTimer()">结束</button>
+        </div>
+        <div class="status" id="status">准备就绪</div>
+        <div class="share">
+            <div class="share-row">
+                <button class="share-btn" id="shareBtn" type="button" onclick="shareLink()">分享链接</button>
+                <button class="copy-btn" id="copyBtn" type="button" onclick="copyLink()">复制链接</button>
+            </div>
+            <div class="share-row" id="lanRow" style="display:none">
+                <input id="lanIpInput" inputmode="url" autocomplete="off" placeholder="输入电脑局域网 IP（如 192.168.1.23 或 192.168.1.23:8000）">
+                <button class="copy-btn" type="button" onclick="detectLanIp()">自动检测</button>
+                <button class="copy-btn" type="button" onclick="saveLanIp()">保存 IP</button>
+                <button class="copy-btn" type="button" onclick="clearLanIp()">清除</button>
+            </div>
+            <div class="share-link" id="shareLink"></div>
+            <div class="share-hint" id="shareHint"></div>
+        </div>
+    </div>
+
+    <script>
+        let totalSeconds = 30 * 60; // 30分钟
+        let remainingSeconds = totalSeconds;
+        let timerInterval = null;
+        let isRunning = false;
+
+        function updateDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            if (remainingSeconds <= 0) {
+                resetTimer();
+            }
+            
+            isRunning = true;
+            document.getElementById('startBtn').textContent = '运行中';
+            document.getElementById('status').textContent = '专注中...';
+            
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateDisplay();
+                
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    document.getElementById('startBtn').textContent = '开始';
+                    document.getElementById('status').textContent = '时间到！休息一下吧';
+                    alert('番茄钟结束！休息一下吧！');
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            remainingSeconds = totalSeconds;
+            updateDisplay();
+            document.getElementById('startBtn').textContent = '开始';
+            document.getElementById('status').textContent = '已归零，准备就绪';
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            document.getElementById('startBtn').textContent = '开始';
+            document.getElementById('status').textContent = '已暂停';
+        }
+
+        const LAN_IP_KEY = 'pomodoro_lan_ip';
+
+        function isLocalhostHost(hostname) {
+            return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+        }
+
+        function getShareUrl() {
+            const url = new URL(window.location.href);
+            const saved = (localStorage.getItem(LAN_IP_KEY) || '').trim();
+            if (isLocalhostHost(url.hostname) && saved) {
+                if (saved.includes(':')) {
+                    const parts = saved.split(':');
+                    const maybeHost = (parts[0] || '').trim();
+                    const maybePort = (parts[1] || '').trim();
+                    if (maybeHost) url.hostname = maybeHost;
+                    if (maybePort) url.port = maybePort;
+                } else {
+                    url.hostname = saved;
+                }
+            }
+            return url.toString();
+        }
+
+        function refreshShareInfo() {
+            const shareUrl = getShareUrl();
+            document.getElementById('shareLink').textContent = shareUrl;
+
+            const isLocalhost = isLocalhostHost(window.location.hostname);
+            const saved = (localStorage.getItem(LAN_IP_KEY) || '').trim();
+            document.getElementById('lanRow').style.display = isLocalhost ? 'flex' : 'none';
+            if (isLocalhost) {
+                const input = document.getElementById('lanIpInput');
+                if (input && input.value.trim() === '') input.value = saved;
+            }
+
+            if (isLocalhost && !saved) {
+                document.getElementById('shareHint').textContent =
+                    '当前链接是 localhost，手机/平板无法访问。点击“自动检测”或输入电脑的局域网 IP（同一 Wi‑Fi 下），保存后再复制/分享，手机/平板即可在浏览器打开。';
+            } else {
+                document.getElementById('shareHint').textContent =
+                    '确保电脑与手机/平板在同一 Wi‑Fi 下，将此链接复制发送到手机/平板浏览器即可打开。';
+            }
+        }
+
+        async function shareLink() {
+            const url = getShareUrl();
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: '番茄钟', url });
+                    return;
+                } catch (e) {}
+            }
+            await copyLink();
+        }
+
+        async function copyLink() {
+            const url = getShareUrl();
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(url);
+                } else {
+                    window.prompt('复制链接（长按全选复制）', url);
+                }
+                document.getElementById('status').textContent = '链接已复制，可发送到手机/平板浏览器打开';
+            } catch (e) {
+                window.prompt('复制链接（长按全选复制）', url);
+            }
+        }
+
+        function saveLanIp() {
+            const input = document.getElementById('lanIpInput');
+            const value = (input ? input.value : '').trim();
+            if (!value) return;
+            localStorage.setItem(LAN_IP_KEY, value);
+            refreshShareInfo();
+            document.getElementById('status').textContent = '已保存局域网 IP，可复制给手机/平板打开';
+        }
+
+        function clearLanIp() {
+            localStorage.removeItem(LAN_IP_KEY);
+            const input = document.getElementById('lanIpInput');
+            if (input) input.value = '';
+            refreshShareInfo();
+            document.getElementById('status').textContent = '已清除局域网 IP';
+        }
+
+        function isPrivateIPv4(ip) {
+            if (!ip) return false;
+            const parts = ip.split('.');
+            if (parts.length !== 4) return false;
+            const nums = parts.map(p => Number(p));
+            if (nums.some(n => Number.isNaN(n) || n < 0 || n > 255)) return false;
+            if (nums[0] === 10) return true;
+            if (nums[0] === 172 && nums[1] >= 16 && nums[1] <= 31) return true;
+            if (nums[0] === 192 && nums[1] === 168) return true;
+            return false;
+        }
+
+        function extractIPv4FromCandidate(candidate) {
+            const m = candidate.match(/(\d{1,3}(?:\.\d{1,3}){3})/);
+            return m ? m[1] : '';
+        }
+
+        async function detectLanIp() {
+            const input = document.getElementById('lanIpInput');
+            if (!input) return;
+            document.getElementById('status').textContent = '正在检测局域网 IP...';
+
+            const RTCPeerConnectionImpl = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+            if (!RTCPeerConnectionImpl) {
+                document.getElementById('status').textContent = '当前浏览器不支持自动检测，请手动输入 IP';
+                return;
+            }
+
+            const pc = new RTCPeerConnectionImpl({ iceServers: [] });
+            pc.createDataChannel('x');
+
+            const found = new Set();
+            const finish = () => {
+                try { pc.close(); } catch (e) {}
+                const candidates = Array.from(found);
+                const picked = candidates.find(isPrivateIPv4) || '';
+                if (picked) {
+                    const port = window.location.port ? `:${window.location.port}` : '';
+                    const value = `${picked}${port}`;
+                    input.value = value;
+                    localStorage.setItem(LAN_IP_KEY, value);
+                    refreshShareInfo();
+                    document.getElementById('status').textContent = `已检测到 ${value}，可直接复制给手机/平板打开`;
+                } else {
+                    document.getElementById('status').textContent = '未能自动检测到 IP，请手动输入电脑局域网 IP';
+                }
+            };
+
+            pc.onicecandidate = (event) => {
+                const c = event && event.candidate && event.candidate.candidate ? event.candidate.candidate : '';
+                if (c) {
+                    const ip = extractIPv4FromCandidate(c);
+                    if (ip && ip !== '127.0.0.1') found.add(ip);
+                } else {
+                    finish();
+                }
+            };
+
+            try {
+                const offer = await pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false });
+                await pc.setLocalDescription(offer);
+            } catch (e) {
+                finish();
+            }
+
+            setTimeout(finish, 1200);
+        }
+
+        refreshShareInfo();
+        window.addEventListener('hashchange', refreshShareInfo);
+
+        const canUseServiceWorker =
+            'serviceWorker' in navigator &&
+            (window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+        if (canUseServiceWorker) {
+            navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+        }
+    </script>
+</body>
+</html>
